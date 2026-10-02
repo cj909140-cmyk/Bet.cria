@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apostas Esportivas</title>
+  <style>
+    :root {
+      --bg-dark: #12141d;
+      --bg-card: #1e2230;
+      --accent: #00e676;
+      --accent-hover: #00c853;
+      --text-main: #ffffff;
+      --text-muted: #a0a5b5;
+      --border: #2a2f42;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding-bottom: 120px;
+    }
+
+    header {
+      background-color: var(--bg-card);
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: #fff;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .league-title {
+      font-size: 1.1rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+
+    .match-card {
+      background-color: var(--bg-card);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .match-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+
+    .odds-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .odd-btn {
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.4rem;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all 0.2s ease;
+    }
+
+    .odd-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .odd-btn.selected {
+      background-color: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+      font-weight: bold;
+    }
+
+    .odd-label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .odd-value {
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+
+    /* Fixed Slip Footer */
+    .bet-slip {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-card);
+      border-top: 2px solid var(--accent);
+      padding: 1rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    }
+
+    .slip-content {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .slip-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .slip-inputs {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .slip-inputs input {
+      flex: 1;
+      padding: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-dark);
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .btn-whatsapp {
+      background-color: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+
+    .btn-whatsapp:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-whatsapp:disabled {
+      background-color: #4a4d57;
+      color: #8a8d9b;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Arena de Apostas</h1>
+  </header>
+
+  <div class="container">
+    <input type="text" id="search" class="search-box" placeholder="Buscar time ou campeonato..." oninput="filterMatches()">
+    <div id="matches-list"></div>
+  </div>
+
+  <div class="bet-slip">
+    <div class="slip-content">
+      <div class="slip-summary">
+        <span>Seleções: <strong id="selected-count">0</strong></span>
+        <span>Odd Total: <strong id="total-odd">1.00</strong></span>
+      </div>
+      <div class="slip-inputs">
+        <input type="number" id="bet-amount" placeholder="Valor da Aposta (R$)" min="1" oninput="calculateReturn()">
+      </div>
+      <div class="slip-summary">
+        <span>Retorno Estimado: <strong id="potential-return" style="color: var(--accent);">R$ 0,00</strong></span>
+      </div>
+      <button id="send-btn" class="btn-whatsapp" disabled onclick="sendToWhatsApp()">Finalizar no WhatsApp</button>
+    </div>
+  </div>
+
+  <script>
+    // CONFIGURAÇÃO: Coloque seu número com DDD aqui (Apenas números)
+    const MEU_WHATSAPP = "5521999999999";
+
+    // Dados das Partidas e Campeonatos
+    const matchesData = [
+      {
+        league: "Brasileirão Série A",
+        matches: [
+          { id: 1, home: "Flamengo", away: "Palmeiras", time: "Hoje - 16:00", odds: { home: 2.10, draw: 3.20, away: 3.40 } },
+          { id: 2, home: "São Paulo", away: "Corinthians", time: "Hoje - 18:30", odds: { home: 2.25, draw: 3.00, away: 3.10 } }
+        ]
+      },
+      {
+        league: "UEFA Champions League",
+        matches: [
+          { id: 3, home: "Real Madrid", away: "Manchester City", time: "Amanhã - 16:00", odds: { home: 2.50, draw: 3.50, away: 2.60 } },
+          { id: 4, home: "Bayern Munique", away: "PSG", time: "Amanhã - 16:00", odds: { home: 1.95, draw: 3.60, away: 3.80 } }
+        ]
+      },
+      {
+        league: "Premier League",
+        matches: [
+          { id: 5, home: "Arsenal", away: "Chelsea", time: "Sábado - 12:30", odds: { home: 1.80, draw: 3.70, away: 4.20 } }
+        ]
+      }
+    ];
+
+    let selectedBets = {};
+
+    function renderMatches(data) {
+      const container = document.getElementById("matches-list");
+      container.innerHTML = "";
+
+      data.forEach(group => {
+        if (group.matches.length === 0) return;
+
+        const leagueTitle = document.createElement("h2");
+        leagueTitle.className = "league-title";
+        leagueTitle.innerText = group.league;
+        container.appendChild(leagueTitle);
+
+        group.matches.forEach(match => {
+          const card = document.createElement("div");
+          card.className = "match-card";
+
+          const isHomeSelected = selectedBets[match.id]?.type === 'home' ? 'selected' : '';
+          const isDrawSelected = selectedBets[match.id]?.type === 'draw' ? 'selected' : '';
+          const isAwaySelected = selectedBets[match.id]?.type === 'away' ? 'selected' : '';
+
+          card.innerHTML = `
+            <div class="match-info">${match.time}</div>
+            <div class="odds-group">
+              <button class="odd-btn ${isHomeSelected}" onclick="toggleBet(${match.id}, 'home', '${match.home}', ${match.odds.home}, '${match.home} x ${match.away}')">
+                <span class="odd-label">${match.home}</span>
+                <span class="odd-value">${match.odds.home.toFixed(2)}</span>
+              </button>
+              <button class="odd-btn ${isDrawSelected}" onclick="toggleBet(${match.id}, 'draw', 'Empate', ${match.odds.draw}, '${match.home} x ${match.away}')">
+                <span class="odd-label">Empate</span>
+                <span class="odd-value">${match.odds.draw.toFixed(2)}</span>
+              </button>
+              <button class="odd-btn ${isAwaySelected}" onclick="toggleBet(${match.id}, 'away', '${match.away}', ${match.odds.away}, '${match.home} x ${match.away}')">
+                <span class="odd-label">${match.away}</span>
+                <span class="odd-value">${match.odds.away.toFixed(2)}</span>
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    function toggleBet(matchId, type, selectionName, odd, matchName) {
+      if (selectedBets[matchId] && selectedBets[matchId].type === type) {
+        delete selectedBets[matchId];
+      } else {
+        selectedBets[matchId] = { type, selectionName, odd, matchName };
+      }
+      updateSlip();
+      renderMatches(getFilteredData());
+    }
+
+    function updateSlip() {
+      const keys = Object.keys(selectedBets);
+      const count = keys.length;
+      let totalOdd = 1;
+
+      keys.forEach(key => {
+        totalOdd *= selectedBets[key].odd;
+      });
+
+      document.getElementById("selected-count").innerText = count;
+      document.getElementById("total-odd").innerText = count > 0 ? totalOdd.toFixed(2) : "1.00";
+      
+      calculateReturn();
+    }
+
+    function calculateReturn() {
+      const amount = parseFloat(document.getElementById("bet-amount").value) || 0;
+      const keys = Object.keys(selectedBets);
+      let totalOdd = 1;
+
+      keys.forEach(key => {
+        totalOdd *= selectedBets[key].odd;
+      });
+
+      const potentialReturn = amount * totalOdd;
+      document.getElementById("potential-return").innerText = `R$ ${potentialReturn.toFixed(2)}`;
+
+      const sendBtn = document.getElementById("send-btn");
+      sendBtn.disabled = !(keys.length > 0 && amount > 0);
+    }
+
+    function getFilteredData() {
+      const query = document.getElementById("search").value.toLowerCase();
+      if (!query) return matchesData;
+
+      return matchesData.map(group => {
+        const matches = group.matches.filter(m => 
+          m.home.toLowerCase().includes(query) || 
+          m.away.toLowerCase().includes(query) || 
+          group.league.toLowerCase().includes(query)
+        );
+        return { ...group, matches };
+      });
+    }
+
+    function filterMatches() {
+      renderMatches(getFilteredData());
+    }
+
+    function sendToWhatsApp() {
+      const amount = parseFloat(document.getElementById("bet-amount").value).toFixed(2);
+      const keys = Object.keys(selectedBets);
+      let totalOdd = 1;
+      let details = "";
+
+      keys.forEach((key, index) => {
+        const bet = selectedBets[key];
+        totalOdd *= bet.odd;
+        details += `${index + 1}. *${bet.matchName}*\n   Aposta: _${bet.selectionName}_ (Odd: ${bet.odd.toFixed(2)})\n`;
+      });
+
+      const potentialReturn = (amount * totalOdd).toFixed(2);
+
+      let message = `📋 *NOVA APOSTA REALIZADA*\n\n`;
+      message += details;
+      message += `\n📊 *Odd Total:* ${totalOdd.toFixed(2)}`;
+      message += `\n💵 *Valor Apostado:* R$ ${amount}`;
+      message += `\n🏆 *Retorno Possível:* R$ ${potentialReturn}\n\n`;
+      message += `Aguardando confirmação do bilhete!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/${MEU_WHATSAPP}?text=${encodedMessage}`, '_blank');
+    }
+
+    // Inicialização
+    renderMatches(matchesData);
+  </script>
+</body>
+</html>
